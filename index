@@ -5792,25 +5792,58 @@
                         <div class="default-goal-note" style="margin-top: 15px;">השינוי ישפיע על מתרימים חדשים ויעדכן מתרימים קיימים שמשתמשים ביעד ברירת המחדל.</div>
                         <div class="nedarim-sync-status" id="nedarimSyncStatus"></div>
                         
-                        <!-- מידע על בסיס הנתונים הלוקאלי -->
+                        <!-- סנכרון דרך GitHub Gist -->
                         <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid var(--border);">
-                            <h3 style="margin-bottom: 15px;">בסיס נתונים לוקאלי (IndexedDB)</h3>
+                            <h3 style="margin-bottom: 15px;">סנכרון בין מחשבים דרך GitHub Gist</h3>
                             <p style="color: var(--muted); margin-bottom: 20px;">
-                                כל הנתונים וההגדרות נשמרים אוטומטית בבסיס הנתונים הלוקאלי (IndexedDB) של הדפדפן. הנתונים נשמרים גם ב-localStorage וגם ב-IndexedDB.
+                                הגדר סנכרון אוטומטי דרך GitHub Gist כדי שכל הנתונים (שמות קבוצות, שמות מתרימים, הגדרות) יסונכרנו בין כל המחשבים. כל שינוי במערכת אחת יתעדכן אוטומטית בכל המערכות האחרות.
                             </p>
+                            
+                            <div class="sync-input-group" style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">GitHub Gist ID:</label>
+                                <input type="text" id="githubGistId" placeholder="לדוגמה: abc123def456" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
+                                <small style="display: block; margin-top: 5px; color: var(--muted);">
+                                    אם אין לך Gist ID, לחץ על "צור Gist חדש" למטה. השתמש באותו Gist ID בכל המחשבים.
+                                </small>
+                            </div>
+                            
+                            <div class="sync-input-group" style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">GitHub Personal Access Token (אופציונלי):</label>
+                                <input type="text" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
+                                <small style="display: block; margin-top: 5px; color: var(--muted);">
+                                    Token נדרש רק אם ה-Gist הוא פרטי. ליצירת Token: GitHub → Settings → Developer settings → Personal access tokens → Generate new token (גישה: gist)
+                                </small>
+                            </div>
+                            
+                            <div class="sync-actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                                <button class="btn btn-primary" onclick="createNewGist()">צור Gist חדש</button>
+                                <button class="btn btn-success" onclick="testGistConnection()">בדוק חיבור</button>
+                                <button class="btn btn-secondary" onclick="saveToGist()">💾 שמור ל-Gist עכשיו</button>
+                                <button class="btn btn-info" onclick="loadFromGist()">📥 טען מ-Gist עכשיו</button>
+                            </div>
+                            
+                            <div class="sync-status" id="gistSyncStatus" style="display: none; padding: 10px; border-radius: 6px; margin-bottom: 15px;"></div>
+                            
+                            <div style="margin-top: 20px;">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500;">
+                                    <input type="checkbox" id="autoGistSyncCheckbox" onchange="saveGistSyncSettings()" style="width: 20px; height: 20px; cursor: pointer;">
+                                    <span>🔄 הפעל סנכרון אוטומטי: שמירה כל 30 שניות וטעינה בעליית התוכנה</span>
+                                </label>
+                            </div>
                             
                             <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 10px; padding: 15px; margin-top: 15px;">
                                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                    <span style="font-size: 24px;">💾</span>
+                                    <span style="font-size: 24px;">✅</span>
                                     <strong style="color: #155724; font-size: 16px;">איך זה עובד?</strong>
                                 </div>
                                 <ul style="color: #155724; margin: 0; padding-right: 20px; line-height: 1.8;">
-                                    <li>כל שינוי במערכת (הוספת מתרים, עדכון סכומים, קבוצות, הגדרות וכו') נשמר אוטומטית ב-IndexedDB</li>
-                                    <li>הנתונים נשמרים גם ב-localStorage וגם ב-IndexedDB</li>
-                                    <li>ההגדרות (תדירות עדכון, כפתור נבחר) נשמרות גם ב-IndexedDB</li>
-                                    <li>כשפותחים את התוכנה, הנתונים נטענים אוטומטית מ-localStorage ו-IndexedDB</li>
-                                    <li><strong>זה לא דורש חיבור לאינטרנט</strong> - הכל נשמר מקומית במחשב</li>
-                            </ul>
+                                    <li><strong>כל הנתונים נשמרים:</strong> שמות קבוצות, שמות מתרימים, הגדרות, סכומים - הכל!</li>
+                                    <li><strong>זיהוי לפי מספר מתרים:</strong> המתרים מזוהה לפי nedarimMatrimId, כך ששינוי שם לא יוצר כפילות</li>
+                                    <li><strong>סנכרון אוטומטי:</strong> כל שינוי נשמר אוטומטית ל-Gist כל 30 שניות</li>
+                                    <li><strong>טעינה אוטומטית:</strong> כשפותחים את התוכנה במחשב אחר, כל הנתונים נטענים אוטומטית מ-Gist</li>
+                                    <li><strong>סנכרון תרומות:</strong> בעליית התוכנה, מתבצע אוטומטית "סנכרון תרומות" כדי לעדכן את הסכומים</li>
+                                    <li><strong>זה עובד בין כל המחשבים</strong> - פשוט השתמש באותו Gist ID בכל המחשבים</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -10031,6 +10064,11 @@
                     syncAllDataToDatabase().catch(err => {
                         console.warn('⚠️ שגיאה בסנכרון לבסיס הנתונים:', err);
                     });
+                    
+                    // שמירה אוטומטית ל-Gist (אם מופעל)
+                    if (typeof autoSaveToGist === 'function') {
+                        autoSaveToGist();
+                    }
                     
                     console.log('💾 נתונים נשמרו אוטומטית');
                 } catch (e) {
@@ -16677,8 +16715,538 @@
         }
         // ===== סוף פונקציות למסך מלא =====
 
-        // ===== מערכת סנכרון בין מערכות - הוסר (עובדים עם IndexedDB בלבד) =====
-        // כל הקוד הקשור לסנכרון לענן (JSONBin.io) הוסר - עובדים עם IndexedDB בלבד
+        // ===== מערכת סנכרון דרך GitHub Gist =====
+        let gistSyncEnabled = false;
+        let gistSyncInterval = null;
+        let gistId = '';
+        let githubToken = '';
+        
+        // טעינת הגדרות Gist
+        function loadGistSyncSettings() {
+            try {
+                const savedGistId = localStorage.getItem('githubGistId');
+                const savedToken = localStorage.getItem('githubToken');
+                const savedEnabled = localStorage.getItem('gistSyncEnabled');
+                
+                if (savedGistId) {
+                    gistId = savedGistId;
+                    const gistIdInput = document.getElementById('githubGistId');
+                    if (gistIdInput) gistIdInput.value = gistId;
+                }
+                if (savedToken) {
+                    githubToken = savedToken;
+                    const tokenInput = document.getElementById('githubToken');
+                    if (tokenInput) tokenInput.value = githubToken;
+                }
+                if (savedEnabled === 'true') {
+                    gistSyncEnabled = true;
+                    const checkbox = document.getElementById('autoGistSyncCheckbox');
+                    if (checkbox) checkbox.checked = true;
+                    enableGistAutoSync();
+                }
+            } catch (e) {
+                console.warn('שגיאה בטעינת הגדרות Gist:', e);
+            }
+        }
+        
+        // שמירת הגדרות Gist
+        function saveGistSyncSettings() {
+            const checkbox = document.getElementById('autoGistSyncCheckbox');
+            const gistIdInput = document.getElementById('githubGistId');
+            const tokenInput = document.getElementById('githubToken');
+            
+            if (gistIdInput) {
+                gistId = gistIdInput.value.trim();
+                localStorage.setItem('githubGistId', gistId);
+            }
+            if (tokenInput) {
+                githubToken = tokenInput.value.trim();
+                localStorage.setItem('githubToken', githubToken);
+            }
+            if (checkbox) {
+                gistSyncEnabled = checkbox.checked;
+                localStorage.setItem('gistSyncEnabled', gistSyncEnabled);
+                
+                if (gistSyncEnabled) {
+                    enableGistAutoSync();
+                } else {
+                    disableGistAutoSync();
+                }
+            }
+        }
+        
+        // יצירת Gist חדש
+        async function createNewGist() {
+            const statusEl = document.getElementById('gistSyncStatus');
+            const tokenInput = document.getElementById('githubToken');
+            const token = tokenInput ? tokenInput.value.trim() : '';
+            
+            if (!token) {
+                statusEl.className = 'sync-status error';
+                statusEl.textContent = '❌ נדרש GitHub Token ליצירת Gist חדש';
+                statusEl.style.display = 'block';
+                showNotification('❌ נדרש GitHub Token ליצירת Gist חדש', 'error');
+                return;
+            }
+            
+            try {
+                statusEl.className = 'sync-status info';
+                statusEl.textContent = 'יוצר Gist חדש...';
+                statusEl.style.display = 'block';
+                
+                const allData = collectAllDataForSync();
+                
+                const response = await fetch('https://api.github.com/gists', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify({
+                        description: 'Purim Campaign Data Sync',
+                        public: false,
+                        files: {
+                            'campaign-data.json': {
+                                content: JSON.stringify(allData, null, 2)
+                            }
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `שגיאת שרת: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const newGistId = data.id;
+                
+                const gistIdInput = document.getElementById('githubGistId');
+                if (gistIdInput) {
+                    gistIdInput.value = newGistId;
+                }
+                gistId = newGistId;
+                saveGistSyncSettings();
+                
+                statusEl.className = 'sync-status success';
+                statusEl.textContent = `✅ Gist נוצר בהצלחה! ID: ${newGistId}`;
+                showNotification('✅ Gist נוצר בהצלחה', 'success');
+            } catch (error) {
+                console.error('שגיאה ביצירת Gist:', error);
+                statusEl.className = 'sync-status error';
+                statusEl.textContent = `❌ שגיאה: ${error.message}`;
+                showNotification(`❌ שגיאה ביצירת Gist: ${error.message}`, 'error');
+            }
+        }
+        
+        // בדיקת חיבור ל-Gist
+        async function testGistConnection() {
+            const statusEl = document.getElementById('gistSyncStatus');
+            const gistIdInput = document.getElementById('githubGistId');
+            const tokenInput = document.getElementById('githubToken');
+            const gistIdValue = gistIdInput ? gistIdInput.value.trim() : '';
+            const token = tokenInput ? tokenInput.value.trim() : '';
+            
+            if (!gistIdValue) {
+                statusEl.className = 'sync-status error';
+                statusEl.textContent = '❌ אנא הזן Gist ID';
+                statusEl.style.display = 'block';
+                return;
+            }
+            
+            try {
+                statusEl.className = 'sync-status info';
+                statusEl.textContent = 'בודק חיבור...';
+                statusEl.style.display = 'block';
+                
+                const headers = {
+                    'Accept': 'application/vnd.github.v3+json'
+                };
+                if (token) {
+                    headers['Authorization'] = `token ${token}`;
+                }
+                
+                const response = await fetch(`https://api.github.com/gists/${gistIdValue}`, {
+                    headers: headers
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `שגיאת שרת: ${response.status}`);
+                }
+                
+                statusEl.className = 'sync-status success';
+                statusEl.textContent = '✅ חיבור הצליח! Gist קיים ונגיש.';
+                saveGistSyncSettings();
+            } catch (error) {
+                console.error('שגיאה בבדיקת חיבור:', error);
+                statusEl.className = 'sync-status error';
+                statusEl.textContent = `❌ שגיאה: ${error.message}`;
+            }
+        }
+        
+        // איסוף כל הנתונים לשמירה (כולל שמות)
+        function collectAllDataForSync() {
+            return {
+                donors: donors.map(d => ({
+                    id: d.id,
+                    name: d.name,
+                    displayName: d.displayName,
+                    originalName: d.originalName,
+                    nedarimMatrimId: d.nedarimMatrimId || d.matrimId,
+                    amount: d.amount,
+                    personalGoal: d.personalGoal,
+                    groupId: d.groupId,
+                    history: d.history || [],
+                    dailyBreakdown: d.dailyBreakdown || [],
+                    createdAt: d.createdAt
+                })),
+                groups: groups.map(g => ({
+                    id: g.id,
+                    name: g.name,
+                    goal: g.goal,
+                    orderNumber: g.orderNumber || 0
+                })),
+                defaultDonorGoal: defaultDonorGoal,
+                matchingGoal: matchingGoal,
+                financeState: financeState,
+                scoutsSchedule: scoutsSchedule,
+                groomGrants: groomGrants,
+                addresses: addresses,
+                toolkitTips: toolkitTips,
+                appSettings: {
+                    matchingGoal,
+                    defaultGroupGoal,
+                    totalRecruiters
+                },
+                liveViewSettings: liveViewSettings,
+                accessControl: accessControl,
+                campaignPlanning: campaignPlanning,
+                autoSyncSettings: {
+                    enabled: autoSyncNedarimEnabled,
+                    selectedAction: autoSyncSelectedAction,
+                    intervalMinutes: autoSyncIntervalMinutes
+                },
+                lastUpdated: new Date().toISOString(),
+                version: '1.0'
+            };
+        }
+        
+        // שמירה ל-Gist
+        async function saveToGist() {
+            const statusEl = document.getElementById('gistSyncStatus');
+            const gistIdInput = document.getElementById('githubGistId');
+            const tokenInput = document.getElementById('githubToken');
+            const gistIdValue = gistIdInput ? gistIdInput.value.trim() : gistId;
+            const token = tokenInput ? tokenInput.value.trim() : githubToken;
+            
+            if (!gistIdValue) {
+                showNotification('אנא הזן Gist ID תחילה', 'error');
+                return;
+            }
+            
+            try {
+                if (statusEl) {
+                    statusEl.className = 'sync-status info';
+                    statusEl.textContent = 'שומר ל-Gist...';
+                    statusEl.style.display = 'block';
+                }
+                
+                const allData = collectAllDataForSync();
+                
+                const headers = {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `token ${token}`;
+                }
+                
+                const response = await fetch(`https://api.github.com/gists/${gistIdValue}`, {
+                    method: 'PATCH',
+                    headers: headers,
+                    body: JSON.stringify({
+                        files: {
+                            'campaign-data.json': {
+                                content: JSON.stringify(allData, null, 2)
+                            }
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `שגיאת שרת: ${response.status}`);
+                }
+                
+                if (statusEl) {
+                    statusEl.className = 'sync-status success';
+                    statusEl.textContent = '✅ הנתונים נשמרו בהצלחה ל-Gist!';
+                }
+                showNotification('✅ הנתונים נשמרו ל-Gist', 'success');
+                
+                // שמירה גם ב-IndexedDB
+                syncAllDataToDatabase().catch(err => {
+                    console.warn('⚠️ שגיאה בסנכרון לבסיס הנתונים:', err);
+                });
+            } catch (error) {
+                console.error('שגיאה בשמירה ל-Gist:', error);
+                if (statusEl) {
+                    statusEl.className = 'sync-status error';
+                    statusEl.textContent = `❌ שגיאה: ${error.message}`;
+                }
+                showNotification(`❌ שגיאה בשמירה ל-Gist: ${error.message}`, 'error');
+            }
+        }
+        
+        // טעינה מ-Gist
+        async function loadFromGist() {
+            const statusEl = document.getElementById('gistSyncStatus');
+            const gistIdInput = document.getElementById('githubGistId');
+            const tokenInput = document.getElementById('githubToken');
+            const gistIdValue = gistIdInput ? gistIdInput.value.trim() : gistId;
+            const token = tokenInput ? tokenInput.value.trim() : githubToken;
+            
+            if (!gistIdValue) {
+                showNotification('אנא הזן Gist ID תחילה', 'error');
+                return;
+            }
+            
+            try {
+                if (statusEl) {
+                    statusEl.className = 'sync-status info';
+                    statusEl.textContent = 'טוען מ-Gist...';
+                    statusEl.style.display = 'block';
+                }
+                
+                const headers = {
+                    'Accept': 'application/vnd.github.v3+json'
+                };
+                if (token) {
+                    headers['Authorization'] = `token ${token}`;
+                }
+                
+                const response = await fetch(`https://api.github.com/gists/${gistIdValue}`, {
+                    headers: headers
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `שגיאת שרת: ${response.status}`);
+                }
+                
+                const gistData = await response.json();
+                const fileContent = gistData.files['campaign-data.json']?.content;
+                
+                if (!fileContent) {
+                    throw new Error('קובץ campaign-data.json לא נמצא ב-Gist');
+                }
+                
+                const data = JSON.parse(fileContent);
+                
+                // טעינת הנתונים - מיזוג חכם לפי nedarimMatrimId
+                if (data.donors) {
+                    data.donors.forEach(remoteDonor => {
+                        const remoteId = remoteDonor.nedarimMatrimId || remoteDonor.matrimId;
+                        if (!remoteId) return; // מדלג על מתרים ללא ID
+                        
+                        const localDonor = donors.find(d => {
+                            const localId = d.nedarimMatrimId || d.matrimId;
+                            return localId && String(localId) === String(remoteId);
+                        });
+                        
+                        if (localDonor) {
+                            // עדכון מתרים קיים - שומר את השם והקבוצה מ-Gist
+                            localDonor.name = remoteDonor.name;
+                            localDonor.displayName = remoteDonor.displayName;
+                            localDonor.originalName = remoteDonor.originalName;
+                            localDonor.groupId = remoteDonor.groupId;
+                            // מעדכן סכום רק אם הוא גדול יותר (לא מאבד נתונים)
+                            if (remoteDonor.amount > localDonor.amount) {
+                                localDonor.amount = remoteDonor.amount;
+                            }
+                        } else {
+                            // מתרים חדש - מוסיף אותו
+                            donors.push(remoteDonor);
+                        }
+                    });
+                }
+                
+                if (data.groups) {
+                    // עדכון קבוצות - שומר את השמות מ-Gist
+                    data.groups.forEach(remoteGroup => {
+                        const localGroup = groups.find(g => g.id === remoteGroup.id);
+                        if (localGroup) {
+                            localGroup.name = remoteGroup.name;
+                            localGroup.orderNumber = remoteGroup.orderNumber || 0;
+                        } else {
+                            groups.push(remoteGroup);
+                        }
+                    });
+                }
+                
+                if (data.defaultDonorGoal !== undefined) defaultDonorGoal = data.defaultDonorGoal;
+                if (data.matchingGoal !== undefined) matchingGoal = data.matchingGoal;
+                if (data.financeState) financeState = data.financeState;
+                if (data.scoutsSchedule) scoutsSchedule = data.scoutsSchedule;
+                if (data.groomGrants) groomGrants = data.groomGrants;
+                if (data.addresses) addresses = data.addresses;
+                if (data.toolkitTips) toolkitTips = data.toolkitTips;
+                if (data.liveViewSettings) liveViewSettings = { ...liveViewSettings, ...data.liveViewSettings };
+                if (data.accessControl) accessControl = data.accessControl;
+                if (data.campaignPlanning) campaignPlanning = data.campaignPlanning;
+                
+                // טעינת הגדרות עדכון אוטומטי
+                if (data.autoSyncSettings) {
+                    autoSyncNedarimEnabled = data.autoSyncSettings.enabled !== undefined ? data.autoSyncSettings.enabled : autoSyncNedarimEnabled;
+                    autoSyncSelectedAction = data.autoSyncSettings.selectedAction || autoSyncSelectedAction;
+                    autoSyncIntervalMinutes = data.autoSyncSettings.intervalMinutes || autoSyncIntervalMinutes;
+                    
+                    storageSetItem('autoSyncNedarimEnabled', autoSyncNedarimEnabled);
+                    storageSetItem('autoSyncSelectedAction', autoSyncSelectedAction);
+                    storageSetItem('autoSyncIntervalMinutes', autoSyncIntervalMinutes);
+                    
+                    const checkbox = document.getElementById('autoSyncNedarimCheckbox');
+                    const select = document.getElementById('autoSyncActionSelect');
+                    const intervalInput = document.getElementById('autoSyncIntervalInput');
+                    const unitSelect = document.getElementById('autoSyncIntervalUnit');
+                    
+                    if (checkbox) checkbox.checked = autoSyncNedarimEnabled;
+                    if (select) select.value = autoSyncSelectedAction;
+                    if (intervalInput && unitSelect) {
+                        if (autoSyncIntervalMinutes >= 60) {
+                            intervalInput.value = autoSyncIntervalMinutes / 60;
+                            unitSelect.value = 'hours';
+                        } else {
+                            intervalInput.value = autoSyncIntervalMinutes;
+                            unitSelect.value = 'minutes';
+                        }
+                        if (typeof updateAutoSyncIntervalDisplay === 'function') {
+                            updateAutoSyncIntervalDisplay();
+                        }
+                    }
+                    if (typeof startAutoRefreshTimer === 'function') {
+                        startAutoRefreshTimer();
+                    }
+                }
+                
+                // שמירה מקומית
+                saveData();
+                
+                // סנכרון לבסיס הנתונים הלוקאלי
+                syncAllDataToDatabase().catch(err => {
+                    console.warn('⚠️ שגיאה בסנכרון לבסיס הנתונים:', err);
+                });
+                
+                // עדכון תצוגות
+                updateDonorsList();
+                updateGroupsDisplay();
+                updateHomeStats();
+                updateLiveView();
+                updateLeadersList();
+                updateLiveTargets();
+                if (typeof renderScoutsTeams === 'function') renderScoutsTeams();
+                if (typeof updateScoutsStats === 'function') updateScoutsStats();
+                if (typeof renderGroomGrantList === 'function') renderGroomGrantList();
+                if (typeof loadLiveViewSettings === 'function') loadLiveViewSettings();
+                if (typeof applyLiveViewSettings === 'function') applyLiveViewSettings();
+                
+                if (statusEl) {
+                    statusEl.className = 'sync-status success';
+                    statusEl.textContent = '✅ הנתונים נטענו בהצלחה מ-Gist!';
+                }
+                showNotification('✅ הנתונים נטענו מ-Gist', 'success');
+            } catch (error) {
+                console.error('שגיאה בטעינה מ-Gist:', error);
+                if (statusEl) {
+                    statusEl.className = 'sync-status error';
+                    statusEl.textContent = `❌ שגיאה: ${error.message}`;
+                }
+                showNotification(`❌ שגיאה בטעינה מ-Gist: ${error.message}`, 'error');
+            }
+        }
+        
+        // הפעלת סנכרון אוטומטי
+        function enableGistAutoSync() {
+            const gistIdInput = document.getElementById('githubGistId');
+            const currentGistId = gistIdInput ? gistIdInput.value.trim() : gistId;
+            
+            if (!currentGistId) {
+                console.warn('⚠️ Gist ID לא הוגדר - לא מפעיל סנכרון אוטומטי');
+                return;
+            }
+            
+            gistId = currentGistId;
+            gistSyncEnabled = true;
+            saveGistSyncSettings();
+            
+            if (gistSyncInterval) {
+                clearInterval(gistSyncInterval);
+            }
+            
+            // שמירה אוטומטית כל 30 שניות
+            gistSyncInterval = setInterval(() => {
+                if (gistSyncEnabled && gistId) {
+                    saveToGist().catch(err => console.warn('שגיאה בשמירה אוטומטית ל-Gist:', err));
+                }
+            }, 30000);
+            
+            console.log('✅ סנכרון אוטומטי ל-Gist הופעל');
+        }
+        
+        // עצירת סנכרון אוטומטי
+        function disableGistAutoSync() {
+            gistSyncEnabled = false;
+            saveGistSyncSettings();
+            
+            if (gistSyncInterval) {
+                clearInterval(gistSyncInterval);
+                gistSyncInterval = null;
+            }
+            
+            console.log('⏸️ סנכרון אוטומטי ל-Gist הופסק');
+        }
+        
+        // שמירה אוטומטית אחרי כל שינוי (debounced)
+        let saveToGistTimeout = null;
+        function autoSaveToGist() {
+            if (!gistSyncEnabled || !gistId) return;
+            
+            if (saveToGistTimeout) {
+                clearTimeout(saveToGistTimeout);
+            }
+            
+            // שמירה אחרי 2 שניות ללא שינויים נוספים
+            saveToGistTimeout = setTimeout(() => {
+                saveToGist().catch(err => console.warn('שגיאה בשמירה אוטומטית ל-Gist:', err));
+            }, 2000);
+        }
+        
+        // שמירה אוטומטית ל-Gist אחרי כל שינוי - נעשה דרך saveData
+        
+        // טעינה אוטומטית בעליית התוכנה
+        window.addEventListener('load', () => {
+            loadGistSyncSettings();
+            
+            // טעינה מ-Gist אחרי 2 שניות (אם סנכרון מופעל)
+            if (gistSyncEnabled && gistId) {
+                setTimeout(async () => {
+                    await loadFromGist();
+                    // אחרי טעינת הנתונים, עושה סנכרון תרומות אוטומטית
+                    if (autoSyncNedarimEnabled) {
+                        setTimeout(async () => {
+                            console.log('🔄 [אתחול] מבצע סנכרון תרומות אוטומטית...');
+                            await syncWithNedarimPlus(true); // silent mode
+                            // שמירה ל-Gist אחרי הסנכרון
+                            await saveToGist();
+                        }, 3000);
+                    }
+                }, 2000);
+            }
+        });
+        
+        // ===== סוף מערכת סנכרון דרך GitHub Gist =====
 
     </script>
 </body>
